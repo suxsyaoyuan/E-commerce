@@ -1,0 +1,140 @@
+#创建客户端项目
+create-react-app client-
+cd ./client 
+yarn 
+# 配置路由
+yarn add react-router-dom
+yarn start
+## pages
+Home
+Product
+Category
+##router
+routes.js
+
+# redux
+yarn add redux react-redux
+
+##APP.js
+循环创建
+
+@1 可以访问正确的路径 但是显示的内容是一样的 按照我的设置是不一样的
+这里别使用<HashRouter>
+
+#公共组件
+conponent
+##layout 布局
+App.js中把routes用Layout包起来
+##Navbar
+引入Material Icons图标
+yarn add @mui/icons-material @mui/material @emotion/styled @emotion/react
+分三部分 左 中 右 
+##Footer
+上：四个item
+下：左右两部分
+##Card
+
+#首页
+## 轮播图 slider js实现
+## 个性产品 FeatureProducts:
+    创建可复用的Card组件,map遍历data,生成Card列表
+    在hover状态下改变z-index来改变层叠关系来实现鼠标放在图片上显示第二张图片的效果
+## 类别 Categories
+两行两列  //可以使用grid布局
+## Contact  
+input
+icons
+
+#商品列表页
+##筛选 Products
+    *筛选条件:categoryId，subCategory，maxPrice，sort
+    使用`useParams`钩子来获取路由中的动态参数，该函数会返回一个包含动态参数键值对的对象
+    使用state将input变成受控组件，点击或拖动input时setState
+    使用position: sticky，让筛选区域始终停留在页面内。
+        sticky必须指定top, bottom, left, right中的至少一个，来表示**粘滞的边界**。下面的代码表示当元素到达距视口顶部时20px时，它将粘滞在那个位置
+        同时必须设置元素的**高度**，保证其到达粘滞边界时仍具有正确的高度，否则粘滞不会起效
+##列表 List
+接收父组件Products传来的筛选条件，渲染符合条件的Card（写服务端后再实现）
+
+#商品页
+左 小图 大图
+右
+
+##cart
+循环创建 {data?.map(item => (<div><div/>))}
+
+#服务器端 strapi
+yarn create strapi-app server- --quickstart
+安装MySql 安装失败 泪目 先不安了
+yarn develop
+
+@1 创建集合类型
+@2 数据关系
+    relation→categories→many to many
+    relation→sub_categories→many to many
+    category中选择和sub_category多对多：relation→sub_categories→many to many
+
+@3 设置api 
+REACT_APP_API_TOKEN=816b2c07089f202cb3ed75fe0c6503ef58025cb5a0c5262171b4724acfa542062b9d67da49ac1b1207eaa6c172c4be9c0c7a21f15b06ab19ab17840349cac3c6eaadeaf3d60b384934ced8bcb52f22c0ab67aee4319ed61bc59abc76b9a73d6e0a43c1be84b116ede2d3fe8973b928f9fc34e85363002d67eb758f8062806723
+@4 yarn add axios
+
+@5 请求数据
+记得开启roles权限
+strapi项目中，REST API默认不返回图片数据，需要给请求添加populate参数：
+指定要显示的图片字段： `http://localhost:1337/api/products?populate=ImageField`
+或者显示全部字段：`http://localhost:1337/api/products?populate=*`
+Featured products和Trending products是根据type字段进行区分的，使用strapi提供的filters参数进行过滤
+
+@6 封装axios请求—useFetch钩子函数
+@7 使用服务端数据渲染页面
+    FeaturedProducts
+    List
+    Products
+    Product
+    Card
+* 这里注意用大括号 const { data, loading, error } = useFetch(`/products/${id}?populate=*`);
+* List组件中没有创建card: 
+        发现不加&sort=price:${sort}可以
+        <input type="radio" id='asc' value="asc" name='price' onChange={e => setSort("asc")} /> 
+        忘了写value了，可能导致 setSort 时传递的值为 undefined 或空字符串，从而影响了排序参数的生成  加上之后好了
+
+        早上醒来又不行了 ...
+        const { data, loading, error } = useFetch(`/products?populate=*&[filters][categories][id]=${catId}${subCats.map(item => `&[filters][sub_categories][id][$eq]=${item}`)}&[filters][price][$lte]=${maxPrice}` + `${sort ? `&sort=price:${sort}` : ""}`);
+        // &sort=price:${sort} 改成这样就好了 `${sort ? `&sort=price:${sort}` : ""}`  改成这样好了
+
+* Product 出不来 获取不了数据
+    <img src={process.env.REACT_APP_UPLOAD_URL + data?.attributes[selectedImg]?.data?.attributes?.url}
+
+    <img src={process.env.REACT_APP_UPLOAD_URL + data?.attributes?.img?.data?.attributes?.url}
+    这句有问题  但是这样去掉可以渲染出来数据
+
+    <img src={process.env.REACT_APP_UPLOAD_URL + data?.attributes?.[selectedImg]?.data?.attributes?.url}
+    这样就改好了 直接替换掉原来img/img2的地方 换成动态设置的就行
+
+@8 Redux
+yarn add @reduxjs/toolkit react-redux
+
+store.js
+cartReducer.js 
+注意添加商品到购物车时，检查购物车中是否已存在该商品
+
+使用：
+    Cart.jsx
+    Product.jsx
+    Navbar.jsx
+
+▲浏览器安装redux扩展
+
+@9 数据持久化
+在 Redux 中，状态是存储在内存中的，当应用程序刷新时，状态将被重置为其初始值。
+为了保留状态，我们可以使用redux-persist库（[redux-persist - npm (npmjs.com)](https://www.npmjs.com/package/redux-persist)），将状态存储到本地存储或会话存储中，以便在应用重新加载时恢复状态。
+【不做了】
+# Stripe付款 
+【不做了】
+
+# 项目部署 Hostinger asfak/youtube
+npm run bulid
+复制到Hostinger中public_html
+ubuntu
+nagins
+【没部署】
